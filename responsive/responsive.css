@@ -1,0 +1,33 @@
+/* responsive.css */
+@media screen 
+    and (min-device-width: 1600px) { 
+      /*If the browser screen width is greater than 1600 pixels, display the top-left image of homer.jpg*/
+      .homer {width:312px; height:312px; background:url(homer.jpg) 0px 0px;}
+}
+
+@media screen 
+    and (max-device-width: 600px) { 
+    /*If the browser screen width is less than or equal to 600 pixels, display the top-left image of homer.jpg*/
+    .homer {width:312px; height:312px; background:url(homer.jpg) 0px 0px;}
+}
+
+@media screen 
+    and (min-device-width: 1400px) 
+    and (max-device-width: 1600px)  { 
+      /*If the browser screen width is greater than 1400 pixels but less than or equal to 1600 pixels, display the top-right image of homer.jpg*/
+      .homer {width:312px; height:312px; background:url(homer.jpg) -313px 0px;}
+}
+
+@media screen 
+  and (min-device-width: 800px)
+  and (max-device-width: 1000px)  { 
+      /*If the browser screen width is greater than 800 pixels but less than or equal to 1000 pixels, display the bottom-left image of homer.jpg*/
+      .homer {width:312px; height:312px; background:url(homer.jpg) 0px -313px;}
+}
+
+@media screen 
+  and (min-device-width: 1000px) 
+  and (max-device-width: 1200px) { 
+      /*If the browser screen width is greater than 1000 pixels but less than or equal to 1200 pixels, display the last image, bottom-right of homer.jpg*/
+      .homer {width:312px; height:312px; background:url(homer.jpg) -313px -313px;}
+}
