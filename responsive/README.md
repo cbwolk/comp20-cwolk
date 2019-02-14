@@ -3,7 +3,7 @@ Colton Wolk
 Lab 4 README.md
 
 Assignment: Responsive Design
-Hours Spent: 3
+Hours Spent: 2
 
 Purpose: The purpose of this assignment is to practice writing CSS for responsive design using sprite sheets.
 
