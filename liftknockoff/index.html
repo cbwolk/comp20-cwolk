@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="style.css" type="text/css" />
     </head>
     <body onload="getLocation()">
-        <div id="location">Trying to determine location...</div>
+<!--        <div id="location">Trying to determine location...</div>-->
         <div id="map"></div>
         
         <script>
@@ -21,7 +21,7 @@
                       lat = somePos.coords.latitude;
                       lng = somePos.coords.longitude;           
 
-                      printLocation();
+//                      printLocation();
                       startRequest();
                   });
             }
@@ -59,8 +59,14 @@
 
                                 var objectLat = info.passengers[count]["lat"];
                                 var objectLng = info.passengers[count]["lng"];
+                                
+                               if (info.passengers[count]["username"] == "WEINERMOBILE") {
+                                  createMarker(parseFloat(objectLat), parseFloat(objectLng), "weinermobile"); 
+                               } 
+                                else { 
+                                   createMarker(parseFloat(objectLat), parseFloat(objectLng), "passenger");
+                                }
 
-                                createMarker(parseFloat(objectLat), parseFloat(objectLng), "passenger");
                             }
                         }
                     }
@@ -95,11 +101,11 @@
                     });
             }
               
-            function printLocation() {
-              
-                  elem = document.getElementById("location");
-                  elem.innerHTML = '<p class="fun">' + lat + ", " + lng + "</p>";
-            }
+//            function printLocation() {
+//              
+//                  elem = document.getElementById("location");
+//                  elem.innerHTML = '<p class="fun">' + lat + ", " + lng + "</p>";
+//            }
             
             function createMarker(objectLat, objectLng, type) {
                   console.log(type);
@@ -114,7 +120,7 @@
                 var image = 'default.png';
                 
                 if (type == "passenger") {
-                    image = 'passenger.png';
+                    image = 'person.png';
                 }
                 // accomodate for weinermobile
                 else if (type == "vehicle")
