@@ -7,10 +7,10 @@
         <link rel="stylesheet" href="style.css" type="text/css" />
     </head>
     <body onload="getLocation()">
-<!--        <div id="location">Trying to determine location...</div>-->
         <div id="map"></div>
         
         <script>
+            // convert from meters to miles
             const MILES_CONVERSION =  0.00062137;
             var map;       
             var myPos;
@@ -18,10 +18,11 @@
             var myInfoWindow;
             var myPosContent = '';
             var nearestDist = Number.MAX_VALUE;
-            var weinerContent = '';
+            var weinerContent = "<br> The weinermobile can't be found!";
             var lat = -99999;
             var lng = -99999;
             
+            // start off by saving the user's current location
             function getLocation() {
                   navigator.geolocation.getCurrentPosition(function(somePos) {
                       
@@ -32,31 +33,28 @@
                   });
             }
             
+            // get the JSON data
             function startRequest() {
                 
                 var request = new XMLHttpRequest();
                 request.open("POST", "https://hans-moleman.herokuapp.com/rides", true);
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
+                // depending on the state, create the map and vehicle markers
                 request.onreadystatechange = function () {
+                    
                     if (request.readyState == 4 && request.status == 200) {
+                        
                         initMap();
                         var info = JSON.parse(request.responseText);
-                    
-                        console.log(info);
-                        
+                                            
                         if (info.vehicles) {
                             for (count = 0; count < info.vehicles.length; count++) {
-
                                 createMarker(info.passengers[count], "vehicle");
-
                             }
-                        }
-                        else if (info.passengers) {
+                        } else if (info.passengers) {
                             for (count = 0; count < info.passengers.length; count++) {
-
                                 createMarker(info.passengers[count], "passenger");
-
                             }
                         }
                     }
@@ -65,86 +63,87 @@
                 request.send("username=" + "k8ResZzT" + "&lat=" + lat + "&lng=" + lng);  
             }
               
+            // create the map with a marker for the user's current location
             function initMap() {
 
-                    currPos = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
-                    
-                    map = new google.maps.Map(document.getElementById('map'), {
-                        center: currPos,
-                        zoom: 13,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP
-                    });
-                
-                    myPosContent = "Username: k8ResZzT <br> Distance to nearest: ";
+                currPos = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
 
-                    myInfoWindow = new google.maps.InfoWindow({
-                        content: myPosContent
-                    });
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: currPos,
+                    zoom: 13,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
 
-                    myPos = new google.maps.Marker({
-                        position: currPos,
-                        map: map,
-                        icon: 'default.png'
-                    });
-                    myPos.addListener('click', function() {
-                        myInfoWindow.open(map, myPos);
-                    });
+                myPosContent = "Username: k8ResZzT <br> Distance to nearest: ";
+
+                myInfoWindow = new google.maps.InfoWindow({
+                    content: myPosContent
+                });
+
+                myPos = new google.maps.Marker({
+                    position: currPos,
+                    map: map,
+                    icon: 'default.png'
+                });
+                myPos.addListener('click', function() {
+                    myInfoWindow.open(map, myPos);
+                });
             }
             
+            // creates a marker unique to each passenger or vehicle
             function createMarker(object, type) {
-                    var objectLat = parseFloat(object["lat"]);
-                    var objectLng = parseFloat(object["lng"]);
-                    var username = object["username"];
                 
-                    var newPos = new google.maps.LatLng(objectLat, objectLng);
-                    var distAway = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
-                
-                    var contentString = "Username: " + username + "<br>Distance Away: " + distAway;
-                
-                    var infowindow = new google.maps.InfoWindow({
-                        content: contentString
-                    });
-                
-                    var image = 'default.png';
+                var objectLat = parseFloat(object["lat"]);
+                var objectLng = parseFloat(object["lng"]);
+                var username = object["username"];
 
-                    if (username == "WEINERMOBILE") {
-                        image = 'weinermobile.png';
-                    }
-                    else if (type == "vehicle") {
-                        image = 'car.png';
-                    }
-                    else if (type == "passenger") {
-                        image = 'person.png';
-                    }
+                var newPos = new google.maps.LatLng(objectLat, objectLng);
+                var distAway = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
 
-                        var marker = new google.maps.Marker({
-                            position: newPos,
-                            map: map,
-                            icon: image
-                        });     
+                var contentString = "Username: " + username + "<br>Distance Away: " + distAway;
 
-                        marker.addListener('click', function() {
-                            infowindow.open(map, marker);
-                        });
+                var infowindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
 
-                    updateDist(newPos, username, type);
-              }
+                var image = 'default.png';
+
+                if (username == "WEINERMOBILE") {
+                    image = 'weinermobile.png';
+                } else if (type == "vehicle") {
+                    image = 'car.png';
+                } else if (type == "passenger") {
+                    image = 'person.png';
+                }
+
+                var marker = new google.maps.Marker({
+                    position: newPos,
+                    map: map,
+                    icon: image
+                });     
+
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+
+                updateDist(newPos, username, type);
+            }
             
+            // update the distance of the closest passenger or vehicle to the user
             function updateDist(newPos, username, type) {
-                
+
                 var currDist = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
-                
+
+                // if a weinermobile is seen, calculate the distance and append it to the content string after
                 if (username == "WEINERMOBILE") {
                     weinerDist = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
                     weinerContent = "<br> Distance to Weinermobile: " + weinerDist;
-                }
-                else if (currDist < nearestDist) {
+                } else if (currDist < nearestDist) {
                     nearestDist = currDist;
-                }
-                else {
+                } else {
                     return;
                 }      
-                
+
                 myPosContent = "Username: k8ResZzT <br> Distance to nearest " + type + ": " + nearestDist + weinerContent;
                 myInfoWindow = new google.maps.InfoWindow({
                     content: myPosContent
@@ -152,6 +151,7 @@
             }
               
         </script>
+        
         <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places&key=AIzaSyC9sQaGQMUn1TEZG3C11LjRlpQAppS4WGk"
             async defer></script>
     </body>
