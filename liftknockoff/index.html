@@ -11,7 +11,14 @@
         <div id="map"></div>
         
         <script>
-            var map;        
+            const MILES_CONVERSION =  0.00062137;
+            var map;       
+            var myPos;
+            var currPos;
+            var myInfoWindow;
+            var myPosContent = '';
+            var nearestDist = Number.MAX_VALUE;
+            var weinerContent = '';
             var lat = -99999;
             var lng = -99999;
             
@@ -21,7 +28,6 @@
                       lat = somePos.coords.latitude;
                       lng = somePos.coords.longitude;           
 
-//                      printLocation();
                       startRequest();
                   });
             }
@@ -35,7 +41,6 @@
                 request.onreadystatechange = function () {
                     if (request.readyState == 4 && request.status == 200) {
                         initMap();
-                        //alert(request.responseText);
                         var info = JSON.parse(request.responseText);
                     
                         console.log(info);
@@ -43,29 +48,14 @@
                         if (info.vehicles) {
                             for (count = 0; count < info.vehicles.length; count++) {
 
-                                var objectLat = info.vehicles[count]["lat"];
-                                var objectLng = info.vehicles[count]["lng"];
+                                createMarker(info.passengers[count], "vehicle");
 
-                               if (info.vehicles[count]["username"] == "WEINERMOBILE") {
-                                  createMarker(parseFloat(objectLat), parseFloat(objectLng), "weinermobile"); 
-                               } 
-                                else { 
-                                   createMarker(parseFloat(objectLat), parseFloat(objectLng), "vehicle");
-                                }
                             }
                         }
-                        if (info.passengers) {
+                        else if (info.passengers) {
                             for (count = 0; count < info.passengers.length; count++) {
 
-                                var objectLat = info.passengers[count]["lat"];
-                                var objectLng = info.passengers[count]["lng"];
-                                
-                               if (info.passengers[count]["username"] == "WEINERMOBILE") {
-                                  createMarker(parseFloat(objectLat), parseFloat(objectLng), "weinermobile"); 
-                               } 
-                                else { 
-                                   createMarker(parseFloat(objectLat), parseFloat(objectLng), "passenger");
-                                }
+                                createMarker(info.passengers[count], "passenger");
 
                             }
                         }
@@ -77,76 +67,92 @@
               
             function initMap() {
 
-                    var currPos = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
-
+                    currPos = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+                    
                     map = new google.maps.Map(document.getElementById('map'), {
                         center: currPos,
                         zoom: 13,
                         mapTypeId: google.maps.MapTypeId.ROADMAP
                     });
+                
+                    myPosContent = "Username: k8ResZzT <br> Distance to nearest: ";
 
-                    var contentString = "Username: k8ResZzT <br> Distance away: ...";
-
-                    var infowindow = new google.maps.InfoWindow({
-                        content: contentString
+                    myInfoWindow = new google.maps.InfoWindow({
+                        content: myPosContent
                     });
 
-                    var myPos = new google.maps.Marker({
+                    myPos = new google.maps.Marker({
                         position: currPos,
                         map: map,
                         icon: 'default.png'
                     });
                     myPos.addListener('click', function() {
-                        infowindow.open(map, myPos);
+                        myInfoWindow.open(map, myPos);
                     });
             }
-              
-//            function printLocation() {
-//              
-//                  elem = document.getElementById("location");
-//                  elem.innerHTML = '<p class="fun">' + lat + ", " + lng + "</p>";
-//            }
             
-            function createMarker(objectLat, objectLng, type) {
-                  console.log(type);
-                    var contentString = "Latitude: " + objectLat + "<br>" + "Longitude: " + objectLng;
+            function createMarker(object, type) {
+                    var objectLat = parseFloat(object["lat"]);
+                    var objectLng = parseFloat(object["lng"]);
+                    var username = object["username"];
                 
-                    console.log(contentString);
-
+                    var newPos = new google.maps.LatLng(objectLat, objectLng);
+                    var distAway = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
+                
+                    var contentString = "Username: " + username + "<br>Distance Away: " + distAway;
+                
                     var infowindow = new google.maps.InfoWindow({
                         content: contentString
                     });
                 
-                var image = 'default.png';
-                
-                if (type == "passenger") {
-                    image = 'person.png';
-                }
-                // accomodate for weinermobile
-                else if (type == "vehicle")
-                    {
-                        image = 'car.png';
-                    }
-                else if (type == "weinermobile")
-                    {
+                    var image = 'default.png';
+
+                    if (username == "WEINERMOBILE") {
                         image = 'weinermobile.png';
                     }
+                    else if (type == "vehicle") {
+                        image = 'car.png';
+                    }
+                    else if (type == "passenger") {
+                        image = 'person.png';
+                    }
 
-                var newPos = new google.maps.LatLng(parseFloat(objectLat), parseFloat(objectLng));
-                
-                    var marker = new google.maps.Marker({
-                        position: newPos,
-                        map: map,
-                        icon: image
-                    });     
-                
-                    marker.addListener('click', function() {
-                        infowindow.open(map, marker);
-                    });
+                        var marker = new google.maps.Marker({
+                            position: newPos,
+                            map: map,
+                            icon: image
+                        });     
+
+                        marker.addListener('click', function() {
+                            infowindow.open(map, marker);
+                        });
+
+                    updateDist(newPos, username, type);
               }
+            
+            function updateDist(newPos, username, type) {
+                
+                var currDist = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
+                
+                if (username == "WEINERMOBILE") {
+                    weinerDist = google.maps.geometry.spherical.computeDistanceBetween(newPos, currPos) * MILES_CONVERSION;
+                    weinerContent = "<br> Distance to Weinermobile: " + weinerDist;
+                }
+                else if (currDist < nearestDist) {
+                    nearestDist = currDist;
+                }
+                else {
+                    return;
+                }      
+                
+                myPosContent = "Username: k8ResZzT <br> Distance to nearest " + type + ": " + nearestDist + weinerContent;
+                myInfoWindow = new google.maps.InfoWindow({
+                    content: myPosContent
+                });
+            }
               
         </script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9sQaGQMUn1TEZG3C11LjRlpQAppS4WGk"
+        <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places&key=AIzaSyC9sQaGQMUn1TEZG3C11LjRlpQAppS4WGk"
             async defer></script>
     </body>
 </html>
