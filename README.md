@@ -27,7 +27,7 @@ where my group is working with very complex technologies and services, and
 also for Assignment 3, which I found to be challenging.
 
 
-## What Else I want to Learn
+## What's Next
 
 I would like to gain an even more thorough understanding of the networks, in
 addition to persuring other interests in CS such as algorithms and machine
